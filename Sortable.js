@@ -417,6 +417,7 @@
 		},
 
 		_emulateDragOver: function () {
+
 			if (touchEvt) {
 				if (this._lastX === touchEvt.clientX && this._lastY === touchEvt.clientY) {
 					return;
@@ -608,6 +609,41 @@
 					return;
 				}
 
+				if (target && lastEl !== target) {
+					lastEl = target;
+					lastCSS = _css(target);
+					lastParentCSS = _css(target.parentNode);
+				}
+
+				if(!target) return;
+
+				var targetRect = target.getBoundingClientRect(),
+					width = targetRect.right - targetRect.left,
+					height = targetRect.bottom - targetRect.top,
+					floating = /left|right|inline/.test(lastCSS.cssFloat + lastCSS.display)
+						|| (lastParentCSS.display == 'flex' && lastParentCSS['flex-direction'].indexOf('row') === 0),
+					isWide = (target.offsetWidth > dragEl.offsetWidth),
+					isLong = (target.offsetHeight > dragEl.offsetHeight),
+					yPos = (floating ? (evt.clientX - targetRect.left) / width : (evt.clientY - targetRect.top) / height),
+					heightPos = (evt.clientY - targetRect.top),
+					halfway = yPos > 0.5,
+					bottomHalf = heightPos > 0 && (yPos <= 0.5 && yPos >= 0),
+					nextSibling = target.nextElementSibling,
+					moveVector = _onMove(rootEl, el, dragEl, dragRect, target, targetRect),
+					after
+				;
+
+				_dispatchEvent(this, rootEl, 'dragOver', {
+					source: target,
+					target: target.previousElementSibling,
+					targetRect: targetRect,
+					isHittingBottomHalf: bottomHalf,
+					clientY: evt.clientY,
+					clientX: evt.clientX,
+					targetLeft: targetRect.left,
+					targetTop: targetRect.top
+				});
+
 
 				if ((el.children.length === 0) || (el.children[0] === ghostEl) ||
 					(el === evt.target) && (target = _ghostIsLast(el, evt))
@@ -624,6 +660,7 @@
 					_cloneHide(isOwner);
 
 					if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect) !== false) {
+
 						if (!dragEl.contains(el)) {
 							el.appendChild(dragEl);
 							parentEl = el; // actualization
@@ -634,25 +671,8 @@
 					}
 				}
 				else if (target && !target.animated && target !== dragEl && (target.parentNode[expando] !== void 0)) {
-					if (lastEl !== target) {
-						lastEl = target;
-						lastCSS = _css(target);
-						lastParentCSS = _css(target.parentNode);
-					}
 
-
-					var targetRect = target.getBoundingClientRect(),
-						width = targetRect.right - targetRect.left,
-						height = targetRect.bottom - targetRect.top,
-						floating = /left|right|inline/.test(lastCSS.cssFloat + lastCSS.display)
-							|| (lastParentCSS.display == 'flex' && lastParentCSS['flex-direction'].indexOf('row') === 0),
-						isWide = (target.offsetWidth > dragEl.offsetWidth),
-						isLong = (target.offsetHeight > dragEl.offsetHeight),
-						halfway = (floating ? (evt.clientX - targetRect.left) / width : (evt.clientY - targetRect.top) / height) > 0.5,
-						nextSibling = target.nextElementSibling,
-						moveVector = _onMove(rootEl, el, dragEl, dragRect, target, targetRect),
-						after
-					;
+					_dispatchEvent(this, rootEl, 'dragOverEnd', targetRect, halfway, nextSibling);
 
 					if (moveVector !== false) {
 						_silent = true;
