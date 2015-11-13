@@ -633,6 +633,7 @@
 					after
 				;
 
+
 				_dispatchEvent(this, rootEl, 'dragOver', {
 					source: target,
 					target: target.previousElementSibling,
