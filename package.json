@@ -1,7 +1,7 @@
 {
   "name": "sortablejs",
   "exportName": "Sortable",
-  "version": "1.4.2",
+  "version": "1.4.22",
   "devDependencies": {
     "grunt": "*",
     "grunt-version": "*",
